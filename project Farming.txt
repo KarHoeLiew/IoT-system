@@ -1,0 +1,548 @@
+
+sensor
+humid/temp pin A7
+water      pin A0
+light      pin A5
+
+Actuator
+led        pin l3
+LCD        pin ....
+
+##################################################################
+
+# LCD With humid and temperature sensor
+
+// include the library code:
+#include <LiquidCrystal.h>
+#include "DHT.h"
+
+// set the DHT Pin
+#define DHTPIN 7
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  // set up the LCD's number of columns and rows: 
+  lcd.begin(16, 2);
+  dht.begin();
+  
+  // Print a message to the LCD.
+  lcd.print("Temp:  Humidity:");
+}
+
+void loop() {
+  delay(500);
+  // set the cursor to column 0, line 1
+  // (note: line 1 is the second row, since counting begins with 0):
+  lcd.setCursor(0, 1);
+  // read humidity
+  float h = dht.readHumidity();
+  //read temperature in Fahrenheit
+  float f = dht.readTemperature(true);
+
+  if (isnan(h) || isnan(f)) {
+    lcd.print("ERROR");
+    return;
+  }
+
+  lcd.print(f);
+  lcd.setCursor(7,1);
+  lcd.print(h);  
+}
+
+###############################################################################
+
+# Light sensor with LED bulb
+
+const int ledPin = 13;
+
+const int ldrPin = A0;
+
+void setup() {
+
+Serial.begin(9600);
+
+pinMode(ledPin, OUTPUT);
+
+pinMode(ldrPin, INPUT);
+
+}
+
+void loop() {
+
+int ldrStatus = analogRead(ldrPin);
+
+if (ldrStatus <= 200) {
+
+digitalWrite(ledPin, HIGH);
+
+Serial.print("Its DARK, Turn on the LED : ");
+
+Serial.println(ldrStatus);
+
+} else {
+
+digitalWrite(ledPin, LOW);
+
+Serial.print("Its BRIGHT, Turn off the LED : ");
+
+Serial.println(ldrStatus);
+
+}
+
+}
+
+##############################################################################
+
+# Water Sensor with LCD.
+
+
+// include the library code: 
+#include <LiquidCrystal.h>
+//initialise the library with the numbers of the interface pins 
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2); 
+
+int resval = 0;  // holds the value
+int respin = A5; // sensor pin used
+ 
+void setup() { 
+
+  // set up the LCD's number of columns and rows: 
+  lcd.begin(16, 2); 
+ 
+  // Print a message to the LCD. 
+  lcd.print("WATER LEVEL: "); 
+} 
+ 
+void loop() { 
+  // set the cursor to column 0, line 1 
+  lcd.setCursor(0, 1); 
+   
+  resval = analogRead(respin); //Read data from analog pin and store it to resval variable
+  
+  if (resval<=100){ lcd.println("Empty "); } else if (resval>100 && resval<=300){ lcd.println("Low "); } else if (resval>300 && resval<=330){ lcd.println("Medium "); } else if (resval>330){ 
+    lcd.println("High            "); 
+  }
+  delay(1000); 
+}
+
+
+
+####################################################################################
+#integrated code
+
+#include <DHT.h>
+#include "DHT.h"
+#include <LiquidCrystal.h>
+#define DHTPIN 7     // what pin we're connected to
+#define DHTTYPE DHT11   // we are using the DHT11 sensor
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+DHT dht(DHTPIN, DHTTYPE);
+
+const int ledPin = 13;//light output
+const int ldrPin = A0;//light input
+
+int resval = 0;  // holds the value
+int respin = A5; // water sensor pin
+void setup()
+{
+ 
+  Serial.begin(9600);
+  //temperature
+  for (int DigitalPin = 7; DigitalPin <= 9; DigitalPin++) 
+ {
+  pinMode(DigitalPin, OUTPUT);
+ }
+  lcd.begin(16,2);  //16 by 2 character display
+  dht.begin();
+  
+//light sensor  
+pinMode(ledPin, OUTPUT);
+pinMode(ldrPin, INPUT);
+//water sensor
+//lcd.begin(16, 2);  // set up the LCD's number of columns and rows: 
+}
+ 
+void loop()
+{
+  
+//light sensor
+int ldrStatus = analogRead(ldrPin);
+if (ldrStatus <= 200) {
+digitalWrite(ledPin, HIGH);
+lcd.clear(); 
+lcd.print("LIGHT LEVEL: ");
+lcd.setCursor(0, 1);
+lcd.println("Dark, Light On ");
+Serial.println(ldrStatus);
+} else {
+digitalWrite(ledPin, LOW);
+lcd.print("LIGHT LEVEL: ");
+lcd.setCursor(0, 1);
+lcd.println("Bright  ,Light Off ");
+Serial.println(ldrStatus);}
+delay(2000);
+//water sensor
+// set the cursor to column 0, line 1
+  lcd.clear(); 
+  lcd.print("WATER LEVEL: ");  // Print a message to the LCD.  
+  lcd.setCursor(0, 1); 
+  resval = analogRead(respin); //Read data from analog pin and store it to resval variable
+  if (resval<=100){ 
+    lcd.println("Empty       "); } 
+    else if (resval>100 && resval<=300){ 
+      lcd.println("Low      "); } 
+      else if (resval>300 && resval<=330){ 
+        lcd.println("Medium    "); } 
+        else if (resval>330){ 
+          lcd.println("High            ");  }
+  delay(2000); 
+  
+// Reading temperature or humidity takes about 250 milliseconds!
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();  // Read temperature as Celsius (the default)
+//temperature
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Temp: ");
+  lcd.print(t);  //printing temperarture to the LCD display
+  lcd.print("'C");
+  
+  lcd.setCursor(0,1);
+  lcd.print("Humid: ");
+  lcd.print(h);  //printing humidity to the LCD display
+  lcd.print("%");
+
+delay(2000);
+  
+}
+
+
+
+
+
+
+#############################################################################
+#nodeMCU with Blynk
+
+#define BLYNK_PRINT Serial
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <Servo.h>
+
+//Servo servo;
+// You should get Auth Token in the Blynk App.
+
+char auth[] = "8wUJFFdP8HNK-o9sKM2YlxrhniSqZUyF";
+char ssid[] = "Roony10@unifi";
+char pass[] = "manchesteru";
+const int buzzer = 9;
+//int pinMode D7
+
+void setup()
+{
+  // Debug console
+  Serial.begin(9600);
+  Blynk.begin(auth, ssid, pass);
+ pinMode(D7, OUTPUT);
+ pinMode(buzzer, OUTPUT);//pinMode(D6, OUTPUT); to add buzzer SWITCH 5 ST3
+
+
+  //servo.attach(D6); //Gpio-2 of nodemcu with pwm pin of servo moto
+ 
+}
+
+ BLYNK_WRITE (V5)         //Blynk use V
+ {
+  int pinValue = param.asInt();
+  if (pinValue ==1)
+  {
+    
+    digitalWrite (D7,HIGH); 
+    delay(1000);
+    tone(buzzer, 1000); // Send 1KHz sound signal...
+    delay(1000);        // ...for 1 sec
+ 
+
+  }
+  else
+  {
+    digitalWrite (D7,LOW);    //digitalWrite (D6,LOW); to add buzzer
+     noTone(buzzer);     // Stop sound...
+     delay(1000);        // ...for 1sec
+  }
+  }
+
+void loop()
+{
+  Blynk.run();
+}
+
+
+#############################################################################
+#code RFID WITH MicroSERVO
+#include <SPI.h>
+/* Include the RFID library */
+#include <RFID.h>
+
+/* Define the DIO used for the SDA (SS) and RST (reset) pins. */
+#define SDA_DIO 9
+#define RESET_DIO 8
+/* Create an instance of the RFID library */
+
+#include <Servo.h> //include servo library
+Servo myservo; //define servo as servo
+int pos = 0;//define servo position
+
+RFID RC522(SDA_DIO, RESET_DIO); 
+
+void setup()
+{ 
+  Serial.begin(9600);
+  /* Enable the SPI interface */
+  SPI.begin(); 
+  /* Initialise the RFID reader */
+  RC522.init();
+  myservo.attach(A9);//attach servo to pin 9
+}
+
+void loop()
+{
+  /* Has a card been detected? */
+     Serial.println("Card:");
+     delay(2000);
+  if (RC522.isCard())
+  {
+    /* If so then get its serial number */
+    RC522.readCardSerial();
+    Serial.println("Card detected:");
+    for(int i=0;i<5;i++)
+    {
+    Serial.print(RC522.serNum[i],DEC);
+    //Serial.print(RC522.serNum[i],HEX); //to print card detail in Hexa Decimal format
+    }
+    for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+    
+    Serial.println();
+    Serial.println();
+  }
+     
+  else{
+    myservo.write(0);
+  }
+
+  
+  delay(1000);
+}
+
+##################################################
+#buzzer
+const int buzzer = D7; //buzzer to arduino pin 9
+
+
+void setup(){
+ 
+  pinMode(buzzer, OUTPUT); // Set buzzer - pin 9 as an output
+
+}
+
+void loop(){
+ 
+  tone(buzzer, 5000); // Send 1KHz sound signal...
+  delay(1000);        // ...for 1 sec
+  noTone(buzzer);     // Stop sound...
+  delay(1000);        // ...for 1sec
+  
+}
+
+############################################################################
+1 April new integarete code
+
+#include <LiquidCrystal.h>
+#include <dht.h>
+// include the LCD library
+LiquidCrystal lcd(12, 11, 7, 6, 5, 4);
+// Set pins as 12,11,7,6,5,4. It might be different for your LCD, check the producer catalog
+dht DHT;
+#define DHT11_PIN 3
+
+int potPin = A5; //input pin
+int soil=0;
+
+int resval = 0;  // holds the value
+int respin = A4; // sensor pin used
+
+
+const int ledPin = 2;
+const int ldrPin = A0;
+
+void setup() {
+lcd.begin(16, 2);
+// lcd rows and columns
+Serial.begin(9600);
+
+
+pinMode(ledPin, OUTPUT);
+pinMode(ldrPin, INPUT);
+}
+
+
+void loop() {
+int chk = DHT.read11(DHT11_PIN);
+  lcd.setCursor(0,0); 
+  lcd.print("Temp: ");
+  lcd.print(DHT.temperature);
+  lcd.print((char)223);
+  lcd.print("C");
+  lcd.setCursor(0,1);
+  lcd.print("Humidity: ");
+  lcd.print(DHT.humidity);
+  lcd.print("%");
+  delay(2000);
+  
+/////////////////////////////////////////////////// moisture
+lcd.clear();
+soil = analogRead(potPin) ;
+soil= map(soil,550,10,0,100);
+lcd.setCursor(0, 0);
+lcd.print("Moisture :");
+//display final numbers
+
+lcd.setCursor(0, 1);
+lcd.print(soil);
+//print the percent symbol at the end
+lcd.print("%");
+//wait 0.1 seconds
+delay(2000);
+////////////////////////////////////////////////////////////
+lcd.clear();
+lcd.setCursor(0,0); 
+  lcd.print("WATER LEVEL: ");
+// set the cursor to column 0, line 1 
+  lcd.setCursor(0, 1); 
+  resval = analogRead(respin); //Read data from analog pin and store it to resval variable
+  if (resval<=100){ lcd.println("Empty           "); }
+  else if (resval>100 && resval<=300){ lcd.println("Low         "); }
+  else if (resval>300 && resval<=330){ lcd.println("Medium      "); }
+  else if (resval>330){ 
+    lcd.println("High        "); 
+  }
+  delay(2000);
+//////////////////////////////////////////////////////////////
+lcd.clear();
+ int ldrStatus = analogRead(ldrPin);
+if (ldrStatus <= 200) {
+digitalWrite(ledPin, HIGH);
+lcd.setCursor(0,0); 
+lcd.print("Dark , On LED: ");
+lcd.setCursor(0, 1); 
+lcd.println(ldrStatus);
+} else {
+digitalWrite(ledPin, LOW);
+ lcd.setCursor(0, 0); 
+lcd.print("Bright,Off LED: ");
+ lcd.setCursor(0, 1); 
+lcd.println(
+  ldrStatus);
+}
+delay(2000);
+
+
+}
+
+
+#############################################################################
+arduino with relay
+
+
+int relay = 13; //You can remove this line, it has no use in the program.
+int sensor = 8; //You can remove this line, it has no use in the program.
+int val; //This variable stores the value received from Soil moisture sensor.
+void setup() {
+  pinMode(13,OUTPUT); //Set pin 13 as OUTPUT pin, to send signal to relay
+  digitalWrite(relay,LOW);
+  pinMode(8,INPUT); //Set pin 8 as input pin, to receive data from Soil moisture sensor.
+  Serial.begin(9600);
+}
+
+void loop() { 
+  //val = digitalRead(8);  //Read data from soil moisture sensor  
+    val=Serial.read();
+    Serial.println("WhatS APP :");
+  if(val == '1') {
+  digitalWrite(13,HIGH); //if soil moisture sensor provides LOW value send LOW value to relay
+  Serial.println("value changed to High ");}
+  else if(val == '0') {
+  digitalWrite(13,LOW); //if soil moisture sensor provides HIGH value send HIGH value to relay
+  Serial.println("value changed to Low ");
+  }
+  delay(2000); //Wait for few second and then continue the loop.
+}
+
+///////////////////////////////////////////////////////////////////////////////
+simple relay with water pump
+
+#define BLYNK_PRINT Serial
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <Servo.h>
+
+//Servo servo;
+// You should get Auth Token in the Blynk App.
+
+char auth[] = "8wUJFFdP8HNK-o9sKM2YlxrhniSqZUyF";
+char ssid[] = "Roony10@unifi";
+char pass[] = "manchesteru";
+//const int buzzer = 9;
+//  int pinMode D7
+
+void setup()
+{
+  // Debug console
+  Serial.begin(9600);
+  Blynk.begin(auth, ssid, pass);
+ pinMode(D7, OUTPUT);
+ digitalWrite (D7,LOW); 
+// pinMode(buzzer, OUTPUT);//pinMode(D6, OUTPUT); to add buzzer SWITCH 5 ST3
+
+
+  //servo.attach(D6); //Gpio-2 of nodemcu with pwm pin of servo moto
+ 
+}
+
+ BLYNK_WRITE (V5)         //Blynk use V
+ {
+  int pinValue = param.asInt();
+  if (pinValue ==1)
+  {
+    digitalWrite (D7,HIGH); 
+    delay(1000);
+    //tone(buzzer, 1000); // Send 1KHz sound signal...
+    //delay(1000);        // ...for 1 sec
+  }
+  else
+  {
+    digitalWrite (D7,LOW);    //digitalWrite (D6,LOW); to add buzzer
+     //noTone(buzzer);     // Stop sound...
+     //delay(1000);        // ...for 1sec
+  }
+  }
+
+void loop()
+{
+  Blynk.run();
+}
+
+
